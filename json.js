@@ -450,6 +450,6 @@ const json = {
   ],
   
   "questionErrorLocation": "bottom",
-  "widthMode": "static",
-  "width": "900px"
+  "widthMode": "responsive",
+  "width": "100%"
 };

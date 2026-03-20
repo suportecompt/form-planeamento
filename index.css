@@ -1,5 +1,3 @@
-/* You can add your custom css here. */
-
 /* 1. Remove the background from the body to avoid a "box inside a box" effect */
 #surveyElement .sd-body {
     background-color: transparent !important;
@@ -7,14 +5,25 @@
     box-shadow: none !important;
 }
 
-/* 2. Apply the background to the MAIN container (which includes the logo, title, and questions) */
+/* 2. Apply the background to the MAIN container */
 #surveyElement .sd-root-modern {
-    background-color: #f0f0f0 !important; /* Your container color */
+    background-color: #f0f0f0 !important;
     border-radius: 12px !important;
     padding: 40px !important;
     box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1) !important;
     
-    /* Center the container on the screen to make it look like a document */
-    max-width: 900px !important; /* You can make this number larger or smaller as needed */
-    margin: 40px auto !important; /* 'auto' centers it, '40px' sets top and bottom margins */
+    /* --- REGLAS ESTRICTAS DE RESPONSIVIDAD --- */
+    width: 100% !important; /* Fuerza a ocupar el ancho disponible */
+    max-width: 900px !important; /* Pero que nunca pase de 900px en PC */
+    box-sizing: border-box !important; /* Evita que el padding engorde el formulario */
+    margin: 40px auto !important; 
+}
+
+/* 3. Adaptación extrema para móviles y tablets pequeñas */
+@media (max-width: 768px) {
+    #surveyElement .sd-root-modern {
+        padding: 20px 15px !important; /* Reducimos el padding lateral drásticamente */
+        margin: 15px auto !important; /* Reducimos el margen superior/inferior */
+        border-radius: 8px !important;
+    }
 }
