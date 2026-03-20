@@ -1,0 +1,75 @@
+siDecirNao.DatosMetidosDevenBorrarONoEnviarABD
+Answer: it has to sen all the data, even the null ones.
+
+
+103-change
+106
+107
+108
+309
+contacts, places, ticket, people
+
+
+
+For today;
+
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+
+
+{[(|\/|1 - fondo del form mas claro.|\/|)]}
+
+{[(|\/|2 - texto de los pasos en pag1 fuera.|\/|)]}
+
+{[(|\/|3 - remove 104. el usr se pasara sacando del login.|\/|)]}
+
+{[(|\/|4 - 109 + 1010 se rellenaran automaticamente desde bd|\/|)]}
+
+{[(|\/|5 - remove first page date and hour (mabe taken automaticalli by js??)|\/|)]}
+
+{[(|\/|6 - 309 fills 3010 autmatically|\/|)]}
+
+{[(|\/|7 - 3 pages no and yeses shuld be horizontally|\/|)]}
+
+{[(|\/|8 - add hidden fields emails. Like in first form.|\/|)]}
+
+{[(|\/|9 - All data on each column of the db not a filled jsonb =======> ad columns to alrady created table. let jsonb and add others.|\/|)]}
+
+{[(|\/|10- make boxes smaller. when needed (302. Duração prevista da intervenção no local)|\/|)]}
+
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\
+\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/
+¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢
+
+- Fix boxex for long inputs (names, tickets....) --> 103, 105, 106, 107.
+                    103
+                    105 + 106
+                    107
+
+- yes & no chekboxes horizontally --> 1011, 303, 307, 308
+- db name was changed. check if it works
+- descricao column changed to subject in tickets.
+- hidden table for all, and change falsetrue feature to another thing, mabe what and for what columns. Also change table name to hidden_data
+
+
+
+
+
+
+
+- place/contact/people... duplicated. check them.
+
+
+
+
+
+¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢¢
+/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\/|\
+\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/\|/
+
+
+{
+  "emailsto": "salvado@zonesoft.org,pereira@zonesoft.org,geral@suporte.com.pt,geraldo.junior@eurest.pt",
+  "emailsbcc": "geral@suporte.com.pt,geraldo.junior@eurest.pt",
+  "email_subject": "Comunicação de inicio de faturação"
+}

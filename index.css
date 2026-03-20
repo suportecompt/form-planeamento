@@ -1,0 +1,20 @@
+/* You can add your custom css here. */
+
+/* 1. Remove the background from the body to avoid a "box inside a box" effect */
+#surveyElement .sd-body {
+    background-color: transparent !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+}
+
+/* 2. Apply the background to the MAIN container (which includes the logo, title, and questions) */
+#surveyElement .sd-root-modern {
+    background-color: #f0f0f0 !important; /* Your container color */
+    border-radius: 12px !important;
+    padding: 40px !important;
+    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1) !important;
+    
+    /* Center the container on the screen to make it look like a document */
+    max-width: 900px !important; /* You can make this number larger or smaller as needed */
+    margin: 40px auto !important; /* 'auto' centers it, '40px' sets top and bottom margins */
+}
