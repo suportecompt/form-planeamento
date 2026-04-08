@@ -3,18 +3,25 @@
 window.survey.onComplete.add(async function (sender, options) {
     options.showDataSaving("A guardar os dados no sistema, por favor aguarde...");
 
-    // 1. CRITICAL RETRY: If emails weren't loaded initially, try one last time
+    // 1. CRITICAL RETRY: If emails weren't loaded initially, try one last time via AJAX
     if (!window.hiddenMailConfig) {
         console.log("A tentar carregar os e-mails novamente na submissão...");
         try {
-            const { data, error } = await window.supabaseClient
-                .from('hidden_data') 
-                .select('data')
-                .eq('data_type', 'mails') 
-                .eq('formulario', 'planeamento') 
-                .limit(1);
+            const queryMails = "?select=data&data_type=eq.mails&formulario=eq.planeamento&limit=1";
+            const mailUrl = `${window.AppConfig.SUPABASE_URL}${window.AppConfig.ENDPOINTS.HIDDEN_DATA}${queryMails}`;
             
-            if (error) throw error;
+            const response = await fetch(mailUrl, {
+                method: 'GET',
+                headers: {
+                    'apikey': window.AppConfig.SUPABASE_ANON_KEY,
+                    'Authorization': `${window.AppConfig.SUPABASE_ANON_KEY}`, // Sin Bearer, como vimos que funciona
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (!response.ok) throw new Error(`Erro HTTP no retry: ${response.status}`);
+            const data = await response.json();
             
             if (data && data.length > 0 && data[0].data) {
                 window.hiddenMailConfig = {
@@ -24,7 +31,7 @@ window.survey.onComplete.add(async function (sender, options) {
                 };
             }
         } catch (e) {
-            console.error("Erro no retry dos emails:", e);
+            console.error("Erro no retry dos emails:", e.message);
         }
     }
 
@@ -67,7 +74,7 @@ window.survey.onComplete.add(async function (sender, options) {
         tecnico_email: emailTecnico, 
         respostas: surveyData, // Keep the full JSON intact as backup
         
-        // Individual column mapping (Injects null if the field doesn't exist):
+        // Individual column mapping:
         emailsto: surveyData.emailsto ?? null,
         emailsbcc: surveyData.emailsbcc ?? null,
         email_subject: surveyData.email_subject ?? null,
@@ -97,13 +104,28 @@ window.survey.onComplete.add(async function (sender, options) {
         q507_guia_transporte: surveyData.q507_guia_transporte ?? null
     };
 
-    // 8. SUBMISSION LOGIC
+    // 8. SUBMISSION LOGIC VIA AJAX (POST)
     try {
-        const { error } = await window.supabaseClient
-            .from('planeamento_field_service_responses')
-            .insert([payload]);
+        // Asegúrate de que esta ruta coincida con la de tu tabla
+        const submitUrl = `${window.AppConfig.SUPABASE_URL}${window.AppConfig.ENDPOINTS.RESPONSES}`;
+        
+        const response = await fetch(submitUrl, {
+            method: 'POST',
+            headers: {
+                'apikey': window.AppConfig.SUPABASE_ANON_KEY,
+                'Authorization': `${window.AppConfig.SUPABASE_ANON_KEY}`, // Sin Bearer
+                'Content-Type': 'application/json',
+                'Prefer': 'return=minimal' // Optimización: le dice a Supabase que no devuelva toda la fila insertada
+            },
+            body: JSON.stringify(payload) // Supabase REST espera directamente el objeto JSON, no un array a menos que insertes varios de golpe
+        });
 
-        if (error) throw error;
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error("Detalle del error al guardar:", errorData);
+            throw new Error(`Erro HTTP: ${response.status}`);
+        }
+
         options.showDataSavingSuccess("Os dados foram guardados com sucesso!");
 
     } catch (err) {

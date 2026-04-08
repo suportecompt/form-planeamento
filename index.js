@@ -12,45 +12,58 @@ window.survey.focusFirstQuestionAutomatic = false;
 window.survey.checkErrorsMode = "onNextPage"; 
 
 // =====================================================================
-// GLOBAL VARIABLES
+// GLOBAL VARIABLES & MAPPING
 // =====================================================================
 window.hiddenMailConfig = null; 
 window.idDictionary = {};
 window.peopleExtraData = {};
 
+// Mapeo de la pregunta a su Endpoint correspondiente definido en config.js
 const questionTableMapping = {
-    "q103_ticket": "tickets",
-    "q106_cliente": "company", // <-- Changed to 'company'!
-    "q107_local": "places",
-    "q108_pessoa_responsavel": "people",
-    "q309_nome_adicional": "people"
+    "q103_ticket": window.AppConfig.ENDPOINTS.TICKETS,
+    "q106_cliente": window.AppConfig.ENDPOINTS.COMPANY,
+    "q107_local": window.AppConfig.ENDPOINTS.PLACES,
+    "q108_pessoa_responsavel": window.AppConfig.ENDPOINTS.PEOPLE,
+    "q309_nome_adicional": window.AppConfig.ENDPOINTS.PEOPLE
 };
 
-// Initialize dictionaries for each table mapping
+// Inicializar diccionarios
 Object.keys(questionTableMapping).forEach(qName => {
     window.idDictionary[qName] = {};
 });
 
+// Função auxiliar para fazer chamadas GET à API REST do Supabase
+async function fetchSupabaseGET(endpoint, queryString = "") {
+    const url = `${window.AppConfig.SUPABASE_URL}${endpoint}${queryString}`;
+    const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+            'apikey': window.AppConfig.SUPABASE_ANON_KEY,
+            'Authorization': `${window.AppConfig.SUPABASE_ANON_KEY}`, // Añadido Bearer
+            'Content-Type': 'application/json'
+        }
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Detalle del error:", errorData);
+        throw new Error(`Erro HTTP: ${response.status}`);
+    }
+    return await response.json();
+}
 // =====================================================================
 // INITIALIZATION FUNCTIONS
 // =====================================================================
 
 async function loadInitialData() {
     try {
-        console.log("A ligar à Supabase...");
+        console.log("A ligar à base de dados via AJAX...");
 
-        // 1. Load Emails (Now from hidden_data with the new JSONB column 'data')
-        const { data: mailData, error: mailError } = await window.supabaseClient
-            .from('hidden_data')
-            .select('data')
-            .eq('data_type', 'mails')
-            .eq('formulario', 'planeamento')
-            .limit(1);
-
-        if (mailError) throw mailError;
+        // 1. Load Emails (from hidden_data)
+        const queryMails = "?select=data&data_type=eq.mails&formulario=eq.planeamento&limit=1";
+        const mailData = await fetchSupabaseGET(window.AppConfig.ENDPOINTS.HIDDEN_DATA, queryMails);
         
         if (mailData && mailData.length > 0 && mailData[0].data) {
-            // Extract the data from the JSON 'data' and assign it to hiddenMailConfig
             window.hiddenMailConfig = {
                 emailsto: mailData[0].data.emailsto,
                 emailsbcc: mailData[0].data.emailsbcc,
@@ -62,11 +75,8 @@ async function loadInitialData() {
         }
 
         // 2. Load Technicians
-        const { data: tecData, error: tecError } = await window.supabaseClient
-            .from('tecnicos')
-            .select('id, descricao');
-
-        if (tecError) throw tecError;
+        const queryTecnicos = "?select=id,descricao";
+        const tecData = await fetchSupabaseGET(window.AppConfig.ENDPOINTS.TECNICOS, queryTecnicos);
         
         const q105 = window.survey.getQuestionByName("q105_tecnico");
         if (q105 && tecData) {
@@ -98,44 +108,44 @@ window.survey.onValueChanged.add((sender, options) => {
     }
 });
 
-// Handle lazy loading for dropdown choices from Supabase
+// Handle lazy loading for dropdown choices from Supabase (AJAX)
 window.survey.onChoicesLazyLoad.add((sender, options) => {
-    const tableName = questionTableMapping[options.question.name];
-    if (!tableName || options.skip > 0) return;
+    const tableEndpoint = questionTableMapping[options.question.name];
+    if (!tableEndpoint || options.skip > 0) return;
+    
     const text = options.filter || "";
     if (text.length < 3) { options.setItems([], 0); return; }
 
     let lazyLoadTimeout;
     clearTimeout(lazyLoadTimeout); 
     
-    // Debounce the request
+    // Debounce the request using value from AppConfig
     lazyLoadTimeout = setTimeout(async () => {
         try {
-            // 1. Detect which text column to use depending on the table
-            const textField = (tableName === 'tickets') ? 'subject' : 'descricao';
+            // 1. Detectar columna de texto. Tickets usa 'title', las demás 'descricao'
+            const isTicket = (tableEndpoint === window.AppConfig.ENDPOINTS.TICKETS);
+            const isPeople = (tableEndpoint === window.AppConfig.ENDPOINTS.PEOPLE);
+            const textField = isTicket ? 'title' : 'descricao';
             
-            // 2. Build the select query
-            let selectQuery = `id, ${textField}`;
-            if (tableName === 'people') {
-                selectQuery += ', telemovel, email';
+            // 2. Construir campos a devolver
+            let selectQuery = `id,${textField}`;
+            if (isPeople) {
+                selectQuery += ',telemovel,email';
             }
 
-            // 3. Make the call to Supabase
-            const { data, error } = await window.supabaseClient
-                .from(tableName)
-                .select(selectQuery)
-                .ilike(textField, `%${text}%`) // Search in 'subject' or 'descricao'
-                .limit(20);
+            // 3. Consulta: buscar texto (ilike) y aplicar límite de UI
+            const query = `?select=${selectQuery}&${textField}=ilike.*${encodeURIComponent(text)}*&limit=${window.AppConfig.UI.DROPDOWN_SEARCH_LIMIT}`;
             
-            if (error) throw error;
+            // 4. Chamada AJAX
+            const data = await fetchSupabaseGET(tableEndpoint, query);
 
-            // 4. Map the data
+            // 5. Mapear datos
             const formattedData = data.map(item => {
                 const rId = String(item.id).trim(); 
-                const rText = String(item[textField]).trim(); // Use the correct field dynamically
+                const rText = String(item[textField]).trim();
                 window.idDictionary[options.question.name][rText] = rId;
                 
-                if (tableName === 'people') {
+                if (isPeople) {
                     window.peopleExtraData[rText] = { 
                         telemovel: item.telemovel || "", 
                         email: item.email || "" 
@@ -145,12 +155,13 @@ window.survey.onChoicesLazyLoad.add((sender, options) => {
             });
             options.setItems(formattedData, formattedData.length);
         } catch (e) { 
+            console.error(`Erro na procura:`, e.message);
             options.setItems([], 0); 
         }
-    }, 200);
+    }, window.AppConfig.UI.SEARCH_DELAY_MS);
 });
 
-// Handle server-side validation (Authentication)
+// Handle server-side validation (Authentication via AJAX)
 window.survey.onServerValidateQuestions.add(function (sender, options) {
     if (sender.currentPage.name === "step_login") {
         const email = options.data["login_email"];
@@ -159,9 +170,24 @@ window.survey.onServerValidateQuestions.add(function (sender, options) {
         
         (async () => {
             try {
-                const { error } = await window.supabaseClient.auth.signInWithPassword({ email, password });
-                if (error) options.errors["login_password"] = "Credenciais inválidas.";
+                const loginUrl = `${window.AppConfig.SUPABASE_URL}${window.AppConfig.ENDPOINTS.LOGIN}`;
+                const response = await fetch(loginUrl, {
+                    method: 'POST',
+                    headers: {
+                        'apikey': window.AppConfig.SUPABASE_ANON_KEY,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email: email, password: password })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || data.error) {
+                    options.errors["login_password"] = "Credenciais inválidas.";
+                }
+                // Si el login es exitoso, podríamos guardar el token si lo necesitáramos más adelante
             } catch (err) { 
+                console.error("Erro no login:", err);
                 options.errors["login_password"] = "Erro de ligação. Tente novamente."; 
             } finally { 
                 options.complete(); 
